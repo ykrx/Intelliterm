@@ -1,0 +1,103 @@
+[tool.poetry]
+name = "intelliterm"
+version = "0.1.10"
+description = "Chat with AI from your terminal!"
+authors = ["Yulian Kraynyak <yulian@yulian.codes>"]
+repository = "https://github.com/ykrx/intelliterm"
+readme = "README.md"
+license = "LICENSE.txt"
+packages = [{ include = "intelliterm" }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+openai = "^0.27.8"
+platformdirs = "^3.8.0"
+pick = "^2.2.0"
+prompt-toolkit = "^3.0.38"
+tiktoken = "^0.4.0"
+setuptools = "^68.0.0"
+pyperclip = "^1.8.2"
+pygments = "^2.15.1"
+rich = "^13.4.2"
+emoji = "^2.8.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-cov = "^4.1.0"
+mypy = "^1.4.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+ai = "intelliterm.main:run"
+intelliterm = "intelliterm.main:run"
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+select = ["E", "F"]
+fixable = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "I",
+  "N",
+  "Q",
+  "S",
+  "T",
+  "W",
+  "ANN",
+  "ARG",
+  "BLE",
+  "COM",
+  "DJ",
+  "DTZ",
+  "EM",
+  "ERA",
+  "EXE",
+  "FBT",
+  "ICN",
+  "INP",
+  "ISC",
+  "NPY",
+  "PD",
+  "PGH",
+  "PIE",
+  "PL",
+  "PT",
+  "PTH",
+  "PYI",
+  "RET",
+  "RSE",
+  "RUF",
+  "SIM",
+  "SLF",
+  "TCH",
+  "TID",
+  "TRY",
+  "UP",
+  "YTT",
+]
+
+[tool.mypy]
+python_version = "3.11"
+disallow_incomplete_defs = false
+disable_error_code = "no-redef"
+ignore_missing_imports = true
+disallow_untyped_defs = true
+show_error_context = true
+
+[tool.pytest.ini_options]
+addopts = [
+  "--cov=intelliterm",
+  "--cov-report=html:coverage",
+  "--cov-report=lcov:lcov.info",
+  "-s",
+]
+testpaths = ["tests"]
