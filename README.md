@@ -3,7 +3,7 @@
 > Chat with AI from your terminal!
 
 > **Note**<br/>
-> This is a side project I occasionally work on in my free time, report any bugs and/or desired features. [Contributions are welcome!](#contributing)
+> This is a side project I occasionally work on in my free time, [report](https://github.com/ykrx/Intelliterm/issues) any bugs and/or desired features. [Contributions are welcome!](#contributing)
 
 ## Features
 
