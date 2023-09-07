@@ -1,19 +1,14 @@
 import pytest
 
-from intelliterm.command_palette import (
-    AVAILABLE_COMMANDS,
-    COMMAND_TRIGGER,
-    Command,
-    CommandPalette,
-)
+from intelliterm.command_palette import Command, CommandPalette
 
 
 class TestCommandPalette():
     alias_expected_command_name = [(alias, command.name)
-                                   for command in AVAILABLE_COMMANDS
+                                   for command in CommandPalette.AVAILABLE_COMMANDS
                                    for alias in command.aliases]
     command_name_expected_aliases = [(command.name, command.aliases)
-                                     for command in AVAILABLE_COMMANDS
+                                     for command in CommandPalette.AVAILABLE_COMMANDS
                                      for alias in command.aliases]
 
     @pytest.mark.parametrize(
@@ -35,8 +30,11 @@ class TestCommandPalette():
         assert aliases == expected_aliases
 
     def test_is_valid_input(self) -> None:
-        should_fail = [COMMAND_TRIGGER + x for x in ["bla", "yulian", "jars"]]
-        should_pass = [COMMAND_TRIGGER + command.name for command in AVAILABLE_COMMANDS]
+        should_fail = [CommandPalette.TRIGGER + x for x in ["bla", "yulian", "jars"]]
+        should_pass = [
+            CommandPalette.TRIGGER + command.name
+            for command in CommandPalette.AVAILABLE_COMMANDS
+        ]
 
         for x in should_fail:
             assert not CommandPalette.is_valid_input(x)

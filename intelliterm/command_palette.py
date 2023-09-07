@@ -14,7 +14,6 @@ from rich.panel import Panel
 import intelliterm
 from intelliterm.console import console
 from intelliterm.notifications import notification
-from intelliterm.utils import COLORS
 
 
 key_bindings = KeyBindings()
@@ -29,9 +28,96 @@ def exit_(event: Any) -> None:
     event.app.exit()
 
 
-# TODO(refactor): remove `is_option` (ie: better separation of argument & option logic)
-class Argument:
-    """Class defining a CommandPalette argument/option.
+# TODO(possibly): persist prompt history across sessions
+def get_history() -> None:
+    pass
+
+
+session: PromptSession = PromptSession()     #history=)
+
+
+def bottom_toolbar() -> Any:
+    from intelliterm.config import config
+
+    buffer = session.default_buffer
+    input = buffer.text
+    curr_index = input.count(" ")
+    alias, *args = input.split(" ")
+
+    output = ""
+
+    if not notification.read:
+        output = notification.message
+    else:
+        output = f"<strong>{config.active().name}</strong>"
+
+        if input == CommandPalette.TRIGGER:
+            output = "Enter a command"
+        if CommandPalette.is_valid_input(input):
+            command = CommandPalette.get_command(alias)
+
+            if command:
+                output = alias + " "
+
+                if command.args:
+                    output += " | ".join(
+                        arg.name if arg.is_option else f"&lt;{arg.name}&gt;"
+                        for arg in command.args
+                    )
+            if output.startswith(CommandPalette.TRIGGER):
+                output_groups = output.split(" ", 1)
+
+                try:
+                    output_groups[curr_index
+                                  ] = f"<strong>{output_groups[curr_index]}</strong>"
+                    output = " ".join(output_groups)
+                except IndexError:
+                    pass
+        else:
+            if input != CommandPalette.TRIGGER:
+                output = f"<strong>{input}</strong> : unknown command"
+    return HTML(output)
+
+
+def rprompt() -> str:
+    from intelliterm.config import config
+    return f"[{config.active().name}]"
+
+
+def prompt() -> str:
+    """Prompt for user input.
+    
+    Returns:
+        str: User input.
+    """
+    from intelliterm.config import config
+
+    style: Style = Style.from_dict({
+        "": "",
+        "caret": f"fg:ansi{config.get('accent_color')}",
+        "bottom-toolbar": f"fg:ansi{config.get('accent_color')}",
+    })
+
+    return session.prompt(
+        message=[
+            ("class:caret", ">"),
+            ("class:input", " "),
+        ],
+        auto_suggest=AutoSuggestFromHistory(),
+        completer=FuzzyCompleter(CommandCompleter()),
+        mouse_support=False,
+        key_bindings=key_bindings,
+        validator=validator,
+        validate_while_typing=False,
+        bottom_toolbar=bottom_toolbar,
+        placeholder=HTML(f"<ansiblack>  ({config.active().name})</ansiblack>"),
+     # rprompt=rprompt,
+        style=style,
+    )
+
+
+class CommandArgument:
+    """Class defining a command argument/option.
     
     Attributes:
         name (str): Argument name.
@@ -40,6 +126,8 @@ class Argument:
             (ex: "edit" in: !config edit)
     
     """
+
+    # TODO(refactor): remove `is_option` (ie: improve logic separation)
     def __init__(
         self,
         name: str,
@@ -51,27 +139,26 @@ class Argument:
         self.is_option = is_option
 
 
-# TODO(refactor): reduce redundancy between `Example` and `Usage`
-class Example:
-    """Class defining a usage example.
+class CommandExample:
+    """Class defining a command usage CommandExample.
     
     Attributes:
         command (str): Command name.
         args (Optional[list[Argument]]): List of command arguments/options.
     """
-    def __init__(self, command: str, args: Optional[list[Argument]]) -> None:
+    def __init__(self, command: str, args: Optional[list[CommandArgument]]) -> None:
         self.command = command
         self.args = args
 
 
-class Usage:
-    """Class defining a usage example for a `Command`.
+class CommandUsage:
+    """Class defining a usage CommandExample for a `Command`.
     
     Attributes:
         command (str): Command name.
         description (str): Usage description.
         args (list[Argument]): List of arguments. Defaults to empty list.
-        examples (list[Example]): List of examples. Defaults to empty list.
+        examples (list[CommandExample]): List of examples. Defaults to empty list.
         
     Methods:
         hint() -> str:
@@ -81,8 +168,8 @@ class Usage:
         self,
         command: str,
         description: str,
-        args: list[Argument] = [],
-        examples: list[Example] = [],
+        args: list[CommandArgument] = [],
+        examples: list[CommandExample] = [],
     ):
         self.command = command
         self.args = args
@@ -95,7 +182,7 @@ class Usage:
         Returns:
             str
         """
-        hint = f"[command]{COMMAND_TRIGGER}{self.command}[reset]"
+        hint = f"[command]{CommandPalette.TRIGGER}{self.command}[reset]"
 
         for arg in self.args:
             hint += (
@@ -105,10 +192,10 @@ class Usage:
         hint += f"\n\t\t{self.description}\n"
 
         if self.examples:
-            hint += "\t\t[bold italic]example:[reset] "
+            hint += "\t\t[bold italic]CommandExample:[reset] "
 
             for example in self.examples:
-                hint += f"[command]{COMMAND_TRIGGER + self.command}[reset]"
+                hint += f"[command]{CommandPalette.TRIGGER + self.command}[reset]"
 
                 if example.args:
                     for arg in example.args:
@@ -136,8 +223,8 @@ class Command:
         name: str,
         description: str,
         aliases: list[str],
-        args: Optional[list[Argument]] = None,
-        usage: Optional[list[Usage]] = None,
+        args: Optional[list[CommandArgument]] = None,
+        usage: Optional[list[CommandUsage]] = None,
     ) -> None:
         self.name = name
         self.description = description
@@ -172,143 +259,6 @@ class Command:
         return hint
 
 
-COMMAND_TRIGGER: str = "!"
-COMMAND_REGEX = r"^!(\w+)(?:\s{0,1}(.*))?"
-AVAILABLE_COMMANDS: list[Command] = [
-    Command(
-        name="help",
-        description="Show available commands",
-        aliases=["help", "h"],
-    ),
-    Command(
-        name="version",
-        description="Show version",
-        aliases=["version", "v"],
-    ),
-    Command(
-        name="config",
-        description=f"Manage {intelliterm.__name__} configurations",
-        args=[
-            Argument("name"),
-            Argument("edit", is_option=True),
-            Argument("reset", is_option=True),
-        ],
-        aliases=["use", "switch", "config", "cfg"],
-        usage=[
-            Usage(
-                command="config",
-                description="Show active configuration",
-            ),
-            Usage(
-                command="use",
-                args=[Argument("name")],
-                description=
-                "[reset]Use / switch to another configuration (case-insensitive)",
-                examples=[Example(command="use", args=[Argument("gpt3")])],
-            ),
-            Usage(
-                command="config",
-                args=[Argument("edit", is_option=True)],
-                description=(
-                    "Edit configurations file " +
-                    f"(via {os.environ.get('EDITOR', 'nano')})"
-                )
-            ),
-            Usage(
-                command="config",
-                args=[Argument("reset", is_option=True)],
-                description="Reset configuration to defaults"
-            ),
-        ],
-    ),
-    Command(
-        name="info",
-        description="Show chat info",
-        aliases=["info", "i"],
-    ),
-    Command(
-        name="new",
-        description="Start new chat / clear context",
-        aliases=["n", "new"],
-    ),
-    Command(
-        name="save",
-        description="Save chat",
-        aliases=["save", "s"],
-    ),
-    Command(
-        name="load",
-        description="Load chat",
-        aliases=["load", "l"],
-    ),
-    Command(
-        name="copy",
-        description="Copy response",
-        aliases=["copy", "c"],
-        args=[Argument("code", is_option=True)]
-    ),
-    Command(
-        name="run",
-        description="Run code block in response",
-        aliases=["run", "r"],
-    ),
-    Command(
-        name="file",
-        description="Input a file",
-        aliases=["file", "f"],
-        args=[
-            Argument("path"),
-            Argument("prompt"),
-        ],
-        usage=[
-            Usage(
-                command="file",
-                args=[
-                    Argument("path"),
-                    Argument("prompt"),
-                ],
-                description="Input file with prompt",
-                examples=[
-                    Example(
-                        command="file",
-                        args=[
-                            Argument("file.txt"),
-                            Argument("explain this file"),
-                        ]
-                    )
-                ]
-            ),
-        ],
-    ),
-    Command(
-        name="shell",
-        description="Run a shell command",
-        aliases=["shell", "os"],
-        args=[Argument("command")],
-        usage=[
-            Usage(
-                command="shell",
-                args=[Argument("command")],
-                description=f"Run basic shell commands within {intelliterm.__name__}",
-                examples=[Example(command="shell", args=[Argument("ls")])]
-            ),
-        ],
-    ),
-    Command(
-        name="quit",
-        description=f"Quit {intelliterm.__name__}",
-        aliases=["quit", "q"],
-    )
-]
-
-GROUPED_ALIASES = [command.aliases for command in AVAILABLE_COMMANDS]
-PRIMARY_ALIASES = [
-    command.name if command.name in command.aliases else command.aliases[0]
-    for command in AVAILABLE_COMMANDS
-]
-ALL_ALIASES = [alias for command in AVAILABLE_COMMANDS for alias in command.aliases]
-
-
 class CommandPalette:
     """Class representing a command manager that handles intelliterm-specific commands.
     
@@ -327,6 +277,148 @@ class CommandPalette:
         unrecognized(alias: str) -> None:
             Handle unrecognized command alias.
     """
+    TRIGGER: str = "!"
+    COMMAND_REGEX = r"^!(\w+)(?:\s{0,1}(.*))?"
+
+    AVAILABLE_COMMANDS: list[Command] = [
+        Command(
+            name="help",
+            description="Show available commands",
+            aliases=["help", "h"],
+        ),
+        Command(
+            name="version",
+            description="Show version",
+            aliases=["version", "v"],
+        ),
+        Command(
+            name="config",
+            description=f"Manage {intelliterm.__name__} configurations",
+            args=[
+                CommandArgument("name"),
+                CommandArgument("edit", is_option=True),
+                CommandArgument("reset", is_option=True),
+            ],
+            aliases=["use", "switch", "config", "cfg"],
+            usage=[
+                CommandUsage(
+                    command="config",
+                    description="Show active configuration",
+                ),
+                CommandUsage(
+                    command="use",
+                    args=[CommandArgument("name")],
+                    description=
+                    "[reset]Use / switch to another configuration (case-insensitive)",
+                    examples=[
+                        CommandExample(command="use", args=[CommandArgument("gpt3")])
+                    ],
+                ),
+                CommandUsage(
+                    command="config",
+                    args=[CommandArgument("edit", is_option=True)],
+                    description=(
+                        "Edit configurations file " +
+                        f"(via {os.environ.get('EDITOR', 'nano')})"
+                    )
+                ),
+                CommandUsage(
+                    command="config",
+                    args=[CommandArgument("reset", is_option=True)],
+                    description="Reset configuration to defaults"
+                ),
+            ],
+        ),
+        Command(
+            name="info",
+            description="Show chat info",
+            aliases=["info", "i"],
+        ),
+        Command(
+            name="new",
+            description="Start new chat / clear context",
+            aliases=["n", "new"],
+        ),
+        Command(
+            name="save",
+            description="Save chat",
+            aliases=["save", "s"],
+        ),
+        Command(
+            name="load",
+            description="Load chat",
+            aliases=["load", "l"],
+        ),
+        Command(
+            name="copy",
+            description="Copy response",
+            aliases=["copy", "c"],
+            args=[CommandArgument("code", is_option=True)]
+        ),
+        Command(
+            name="run",
+            description="Run code block in response",
+            aliases=["run", "r"],
+        ),
+        Command(
+            name="file",
+            description="Input a file",
+            aliases=["file", "f"],
+            args=[
+                CommandArgument("path"),
+                CommandArgument("prompt"),
+            ],
+            usage=[
+                CommandUsage(
+                    command="file",
+                    args=[
+                        CommandArgument("path"),
+                        CommandArgument("prompt"),
+                    ],
+                    description="Input file with prompt",
+                    examples=[
+                        CommandExample(
+                            command="file",
+                            args=[
+                                CommandArgument("file.txt"),
+                                CommandArgument("explain this file"),
+                            ]
+                        )
+                    ]
+                ),
+            ],
+        ),
+        Command(
+            name="shell",
+            description="Run a shell command",
+            aliases=["shell", "os"],
+            args=[CommandArgument("command")],
+            usage=[
+                CommandUsage(
+                    command="shell",
+                    args=[CommandArgument("command")],
+                    description=
+                    f"Run basic shell commands within {intelliterm.__name__}",
+                    examples=[
+                        CommandExample(command="shell", args=[CommandArgument("ls")])
+                    ]
+                ),
+            ],
+        ),
+        Command(
+            name="quit",
+            description=f"Quit {intelliterm.__name__}",
+            aliases=["quit", "q"],
+        )
+    ]
+
+    GROUPED_ALIASES = [command.aliases for command in AVAILABLE_COMMANDS]
+    PRIMARY_ALIASES = [
+        command.name if command.name in command.aliases else command.aliases[0]
+        for command in AVAILABLE_COMMANDS
+    ]
+    ALL_ALIASES = [alias for command in AVAILABLE_COMMANDS for alias in command.aliases]
+
     @staticmethod
     def get_command(alias: str) -> Optional[Command]:
         """Get command matching alias.
@@ -337,9 +429,12 @@ class CommandPalette:
         Returns:
             Optional(Command): Command if it exists, otherwise None.
         """
-        alias = alias.replace(COMMAND_TRIGGER, "")
+        alias = alias.replace(CommandPalette.TRIGGER, "")
         return next(
-            (command for command in AVAILABLE_COMMANDS if alias in command.aliases),
+            (
+                command for command in CommandPalette.AVAILABLE_COMMANDS
+                if alias in command.aliases
+            ),
             None,
         )
 
@@ -366,11 +461,13 @@ class CommandPalette:
         """
         help_message = ""
 
-        for i, command in enumerate(AVAILABLE_COMMANDS):
-            aliases = [COMMAND_TRIGGER + alias for alias in command.aliases]
+        for i, command in enumerate(CommandPalette.AVAILABLE_COMMANDS):
+            aliases = [CommandPalette.TRIGGER + alias for alias in command.aliases]
             help_message += f"[command]{', '.join(aliases)}"
             help_message += f"[reset] : {command.description}"
-            help_message += "\n" if i != len(AVAILABLE_COMMANDS) - 1 else ""
+            help_message += "\n" if i != len(
+                CommandPalette.AVAILABLE_COMMANDS
+            ) - 1 else ""
             help_message += command.hint()
         console.print(Panel(help_message, title="Commands"))
 
@@ -384,9 +481,9 @@ class CommandPalette:
         Returns:
             bool
         """
-        if input.startswith(COMMAND_TRIGGER):
-            match = re.match(COMMAND_REGEX, input)     # is command
-            return match.group(1) in ALL_ALIASES if match else False
+        if input.startswith(CommandPalette.TRIGGER):
+            match = re.match(CommandPalette.COMMAND_REGEX, input)     # is command
+            return match.group(1) in CommandPalette.ALL_ALIASES if match else False
         else:
             return True     # is regular text
 
@@ -396,12 +493,12 @@ class CommandPalette:
         """
         grouped_commands = [
             " ".join(["!" + alias for alias in command.aliases])
-            for command in AVAILABLE_COMMANDS
+            for command in CommandPalette.AVAILABLE_COMMANDS
         ]
         columns = [Panel(group) for group in grouped_commands]
         console.print(Columns(columns))
 
-        error = f"{COMMAND_TRIGGER + alias}[reset] "
+        error = f"{CommandPalette.TRIGGER + alias}[reset] "
         error += "is not a command.\n"
         error += "Enter [command]!help"
         error += "[reset] or [command]!h[reset] "
@@ -418,31 +515,34 @@ class CommandPalette:
                 bool
 
         """
-        return alias not in PRIMARY_ALIASES
+        return alias not in CommandPalette.PRIMARY_ALIASES
 
 
 class CommandCompleter(Completer):
     """Auto-completion for CommandPalette.
     """
     def get_completions(self, document: Any, complete_event: Any) -> Generator:
+        from intelliterm.config import config
+
         # current_position: Point = document.get_menu_position()
         # print(current_position)
 
-        word: str = document.current_line.replace(COMMAND_TRIGGER, "")
+        word: str = document.current_line.replace(CommandPalette.TRIGGER, "")
         # word: str = document.get_word_before_cursor(pattern=re.compile(COMMAND_REGEX))
         num_words = len(word.split())
 
         if num_words == 0:
-            # First word (!command)
-            for command in AVAILABLE_COMMANDS:
+            # First word (!word)
+            for command in CommandPalette.AVAILABLE_COMMANDS:
                 for alias in command.aliases:
                     if alias.startswith(word):
                         yield Completion(
-                            COMMAND_TRIGGER + alias,
+                            CommandPalette.TRIGGER + alias,
                             start_position=document.get_start_of_document_position(),
-                            style=f"fg:{COLORS['primary']} bg:black",
+                            style=f"fg:ansi{config.get('accent_color')} bg:black",
                         # selected_style="fg:black bg:red ",
-                            display_meta=f"(aliased: {COMMAND_TRIGGER + command.name})"
+                            display_meta=
+                            f"(aliased: {CommandPalette.TRIGGER + command.name})"
                             if CommandPalette.is_secondary_alias(alias) else
                             command.description,
                         )
@@ -452,92 +552,3 @@ validator = Validator.from_callable(
     CommandPalette.is_valid_input,
     error_message="Invalid command",
 )
-
-
-# TODO(finish): persist prompt history across sessions (possibly)
-def get_history() -> None:
-    pass
-
-
-session: PromptSession = PromptSession()     #history=)
-
-
-def bottom_toolbar() -> Any:
-    from intelliterm.config import config
-
-    buffer = session.default_buffer
-    input = buffer.text
-    curr_index = input.count(" ")
-    alias, *args = input.split(" ")
-
-    output = ""
-
-    if not notification.read:
-        output = notification.message
-    else:
-        output = f"<strong>{config.active().name}</strong>"
-
-        if input == COMMAND_TRIGGER:
-            output = "Enter a command"
-        if CommandPalette.is_valid_input(input):
-            command = CommandPalette.get_command(alias)
-
-            if command:
-                output = alias + " "
-
-                if command.args:
-                    output += " | ".join(
-                        arg.name if arg.is_option else f"&lt;{arg.name}&gt;"
-                        for arg in command.args
-                    )
-            if output.startswith(COMMAND_TRIGGER):
-                output_groups = output.split(" ", 1)
-
-                try:
-                    output_groups[curr_index
-                                  ] = f"<strong>{output_groups[curr_index]}</strong>"
-                    output = " ".join(output_groups)
-                except IndexError:
-                    pass
-        else:
-            if input != COMMAND_TRIGGER:
-                output = f"<strong>{input}</strong> : unknown command"
-    return HTML(output)
-
-
-def rprompt() -> str:
-    from intelliterm.config import config
-    return f"[{config.active().name}]"
-
-
-style: Style = Style.from_dict({
-    "": f"fg:{COLORS['primary']}",
-    "caret": f"fg:{COLORS['primary']}",
-    "bottom-toolbar": f"fg:{COLORS['primary']}",
-})
-
-
-def prompt() -> str:
-    from intelliterm.config import config
-    """Prompt for user input.
-    
-    Returns:
-        str: User input.
-    """
-
-    return session.prompt(
-        message=[
-            ("class:caret", ">"),
-            ("class:input", " "),
-        ],
-        auto_suggest=AutoSuggestFromHistory(),
-        completer=FuzzyCompleter(CommandCompleter()),
-        mouse_support=False,
-        key_bindings=key_bindings,
-        validator=validator,
-        validate_while_typing=False,
-        bottom_toolbar=bottom_toolbar,
-        placeholder=HTML(f"<ansiblack>  ({config.active().name})</ansiblack>"),
-     # rprompt=rprompt,
-        style=style,
-    )

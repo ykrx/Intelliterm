@@ -3,7 +3,6 @@
 import json
 import platform
 import re
-from datetime import datetime
 from typing import Any, Literal, Optional, cast
 
 import pyperclip

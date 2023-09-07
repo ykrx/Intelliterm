@@ -2,65 +2,13 @@ import datetime
 import logging
 import os
 import re
-from typing import Literal, TypedDict
-
-import platformdirs
 
 import intelliterm
+from intelliterm.constants import (
+    LOGS_DIR,
+    SAVED_CHATS_DIR,
+)
 
-# setup_cfg_path = Path(__file__).parent.joinpath("setup.cfg")
-# app_config = c(setup_cfg_path)
-
-AutoCopy = Literal["off", "all", "code"]
-
-CODE_THEME = "lightbulb"
-
-APP_AUTHOR = "Yulian Kraynyak"
-USER_DATA_DIR = platformdirs.user_data_dir(intelliterm.__name__, APP_AUTHOR)
-DOCUMENTS_DIR = platformdirs.user_documents_dir()
-SAVED_CHATS_DIR = os.path.join(DOCUMENTS_DIR, intelliterm.__name__, "chats")
-LOGS_DIR = os.path.join(DOCUMENTS_DIR, intelliterm.__name__, "logs")
-
-ANSI_COLORS = {
-    'black': '\033[30m',
-    'red': '\033[31m',
-    'green': '\033[32m',
-    'yellow': '\033[33m',
-    'blue': '\033[34m',
-    'magenta': '\033[33m',
-    'cyan': '\033[36m',
-    'white': '\033[37m',
-    'reset': '\033[0m'
-}
-
-
-class Colors(TypedDict):
-    """Color definitions (for type hints).
-    """
-    info: str
-    warning: str
-    danger: str
-    primary: str
-    secondary: str
-    surface: str
-    command: str
-    arg: str
-    option: str
-    value: str
-
-
-COLORS: Colors = {
-    "info": "bright_black",
-    "warning": "yellow",
-    "danger": "red",
-    "primary": "#ffd173",
-    "secondary": "yellow",
-    "surface": "#121722",
-    "command": "bold green",
-    "arg": "not bold blue",
-    "option": "not bold magenta",
-    "value": "green"
-}
 
 TIPS = {
     "config": [

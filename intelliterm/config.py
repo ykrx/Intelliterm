@@ -2,6 +2,7 @@ import os
 import random
 import subprocess
 from configparser import ConfigParser, SectionProxy
+from typing import Any
 
 from prompt_toolkit.shortcuts import confirm
 from rich.columns import Columns
@@ -9,17 +10,9 @@ from rich.panel import Panel
 
 from intelliterm.command_palette import CommandPalette
 from intelliterm.console import console
+from intelliterm.constants import USER_DATA_DIR
 from intelliterm.notifications import notification
-from intelliterm.utils import (
-    TIPS,
-    USER_DATA_DIR,
-    logger,
-    longest_line,
-    pretty_dict,
-)
-
-
-CONFIG_PATH = os.path.join(USER_DATA_DIR, "config.ini")
+from intelliterm.utils import TIPS, logger, longest_line, pretty_dict
 
 
 class Config:
@@ -45,6 +38,9 @@ class Config:
         reset() -> None:
             Reset to default configurations file.
     """
+
+    CONFIG_PATH = os.path.join(USER_DATA_DIR, "config.ini")
+
     def __init__(self) -> None:
         self.config: ConfigParser = ConfigParser()
         self.load()
@@ -53,7 +49,7 @@ class Config:
     def exists() -> bool:
         """Check if configuration file exists.
         """
-        return os.path.exists(CONFIG_PATH) and os.path.isfile(CONFIG_PATH)
+        return os.path.exists(Config.CONFIG_PATH) and os.path.isfile(Config.CONFIG_PATH)
 
     @staticmethod
     def default() -> ConfigParser:
@@ -65,6 +61,7 @@ class Config:
             "temperature": "0",
             "presence_penalty": "0",
             "frequency_penalty": "0",
+            "accent_color": "blue"
         }
         default_config['GPT3'] = {
             "model": "gpt-3.5-turbo",
@@ -97,14 +94,14 @@ class Config:
 
                 if section == self.active().name:
                     content = (
-                        f"[primary][bold]{section}[reset]" + "\n" +
+                        f"[{self.get('accent_color')}][bold]{section}[reset]" + "\n" +
                         ("-" * longest_line(pretty_config) + "\n") + pretty_config
                     )
 
                     panels.append(
                         Panel(
                             content,
-                            border_style="primary",
+                            border_style=self.get('accent_color'),
                             title="(active)",
                             title_align="right"
                         )
@@ -116,7 +113,7 @@ class Config:
                         ) + pretty_config)
                     )
 
-        config_command = CommandPalette.get_command("config")
+        config_command = CommandPalette.get_command('config')
 
         if config_command:
             if config_command and config_command.args:
@@ -144,19 +141,29 @@ class Config:
     def edit(self) -> None:
         """Edit configurations file.
         """
-        subprocess.run([os.environ.get("EDITOR", "nano"), CONFIG_PATH])
+        subprocess.run([os.environ.get("EDITOR", "nano"), Config.CONFIG_PATH])
         self.load()
         self.show()
+
+    def validate(self) -> None:
+        # TODO(finish)
+        required_values: dict[str, Any] = {
+            "": {}
+        }
+
+        for section, keys in required_values.items():
+            if section not in self.config:
+                raise Exception(f"Missing section {section} in config")
 
     def load(self) -> None:
         """Load configurations file.
         """
         if not self.exists():
-            os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
-            with open(CONFIG_PATH, "w+") as file:
+            os.makedirs(os.path.dirname(Config.CONFIG_PATH), exist_ok=True)
+            with open(Config.CONFIG_PATH, "w+") as file:
                 self.default().write(file)
                 logger.info("Configurations file not found, set to default")
-        self.config.read(CONFIG_PATH)
+        self.config.read(Config.CONFIG_PATH)
 
     def use(self, config_name: str) -> None:
         """Use a different configuration.
@@ -166,12 +173,12 @@ class Config:
         """
         config_name = config_name.upper()     # case-insensitive
 
-        self.config.read(CONFIG_PATH)
+        self.config.read(Config.CONFIG_PATH)
 
         if config_name != "CONFIG" and self.config.has_section(config_name):
             self.config.set("CONFIG", "active", config_name)
 
-            with open(CONFIG_PATH, "w+") as config_file:
+            with open(Config.CONFIG_PATH, "w+") as config_file:
                 self.config.write(config_file)
                 self.load()
                 notification.emit(f"Switched to <strong>{self.active().name}</strong>")
@@ -187,9 +194,9 @@ class Config:
         yes: bool = confirm("Reset to default configuration?")
 
         if yes:
-            with open(CONFIG_PATH, "w+") as config_file:
+            with open(Config.CONFIG_PATH, "w+") as config_file:
                 self.default().write(config_file)
-                logger.info(f"{CONFIG_PATH} reset to defaults")
+                logger.info(f"{Config.CONFIG_PATH} reset to defaults")
             self.load()
             self.show()
 

@@ -3,15 +3,10 @@ import re
 from typing import Any, Mapping, Optional, cast
 
 from rich.console import Console as C
-from rich.style import Style, StyleType
+from rich.style import StyleType
 from rich.theme import Theme
 
-from intelliterm.utils import COLORS
-
-
-INFO_STYLE = Style(color=f"{COLORS['info']}")
-WARNING_STYLE = Style(color=f"{COLORS['danger']}")
-DANGER_STYLE = Style(color=f"{COLORS['danger']}", bold=True)
+from intelliterm.styling import COLORS, DANGER_STYLE, INFO_STYLE, WARNING_STYLE
 
 
 class Console(C):

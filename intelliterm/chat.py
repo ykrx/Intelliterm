@@ -16,19 +16,14 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 
 import intelliterm
-from intelliterm.command_palette import COMMAND_TRIGGER, CommandPalette, prompt
+from intelliterm.command_palette import CommandPalette, prompt
 from intelliterm.config import config
 from intelliterm.console import console
+from intelliterm.constants import CODE_THEME, SAVED_CHATS_DIR
 from intelliterm.notifications import notification
 from intelliterm.prompt import SPECIAL_PROMPTS, Prompt
-from intelliterm.utils import (
-    CODE_THEME,
-    SAVED_CHATS_DIR,
-    AutoCopy,
-    get_file_info,
-    logger,
-    pretty_dict,
-)
+from intelliterm.types import AutoCopy
+from intelliterm.utils import get_file_info, logger, pretty_dict
 
 if "OPENAI_API_KEY" not in os.environ:
     console.error("Missing OPENAI_API_KEY")
@@ -204,7 +199,7 @@ class Chat:
         total_tokens = self.total_tokens()
 
         if last_prompt:
-            info += f"[bold][primary]:gear: {config.active().name} "
+            info += f"[bold][{config.get('accent_color')}]:gear: {config.active().name} "
             info += f"[reset]([bold]{last_prompt.token_count()} "
             info += f"[reset]token{'s' if last_prompt.token_count() > 1 else ''}, "
             info += f"[bold]{total_tokens} [reset]total)"
@@ -312,7 +307,7 @@ class Chat:
 
             file_path = file_path.replace(os.environ['HOME'], '~')
             logger.info(f"Saved chat ${self.chat_id}: ${file_path}")
-            notification.emit(f"Saved chat ${self.chat_id}: ${file_path}")
+            notification.emit(f"Saved chat: ${file_path}")
 
     # TODO(add test)
     def load(self) -> None:
@@ -450,7 +445,7 @@ class Chat:
                 if input is not None and len(input) > 0:
                     self.history(input)
 
-                    if input.startswith(COMMAND_TRIGGER):
+                    if input.startswith(CommandPalette.TRIGGER):
                         parts = input[1:].split()
                         alias, options = parts[0], parts[1:]
 

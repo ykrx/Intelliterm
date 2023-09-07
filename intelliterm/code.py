@@ -5,8 +5,6 @@ from prompt_toolkit.shortcuts import confirm
 from intelliterm.console import console
 from intelliterm.notifications import notification
 
-# TODO(implement): handle multiple code blocks
-
 
 class Code:
     def __init__(self, language: str, code: str) -> None:
@@ -15,10 +13,12 @@ class Code:
         self._confirmed: bool = False
 
     # TODO(implement): Create venv + install deps (if necessary to run code snippet)
+    # TODO(implement): handle multiple code blocks
     def run(self) -> None:
         """Execute code.
         """
-        if not self._confirmed:     # TODO(fix): doesn't work yet
+        # TODO(fix): doesn't work yet
+        if not self._confirmed:
             self._confirmed = confirm(f"Run {self.language} code?")
 
         if self._confirmed:
