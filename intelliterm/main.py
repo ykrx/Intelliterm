@@ -61,6 +61,7 @@ def parse_args(args: list[str]) -> argparse.Namespace:
     parser = ArgParser()
     parser.add_argument(
         "-v",
+        "-V",
         "--version",
         action="version",
         help="show version number",

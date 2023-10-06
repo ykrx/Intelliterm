@@ -54,7 +54,7 @@ class Config:
     @staticmethod
     def default() -> ConfigParser:
         """Get default configuration.
-        """
+        """        
         default_config = ConfigParser(default_section='GPT3')
         default_config['DEFAULT'] = {
             "model": "gpt-3.5-turbo",

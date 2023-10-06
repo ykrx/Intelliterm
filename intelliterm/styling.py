@@ -1,5 +1,4 @@
-# from intelliterm.config import config
-from rich.style import Style, StyleType
+from rich.style import Style
 
 from intelliterm.types import Colors
 

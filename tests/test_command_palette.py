@@ -1,3 +1,5 @@
+from collections import Counter, defaultdict
+
 import pytest
 
 from intelliterm.command_palette import Command, CommandPalette
@@ -40,3 +42,14 @@ class TestCommandPalette():
             assert not CommandPalette.is_valid_input(x)
         for x in should_pass:
             assert CommandPalette.is_valid_input(x)
+
+    def test_no_overlapping_aliases(self) -> None:
+        alias_to_commands = defaultdict(list)
+        for command in CommandPalette.AVAILABLE_COMMANDS:
+            for alias in command.aliases:
+                alias_to_commands[alias].append(command.name)
+        overlaps = {
+            alias: commands
+            for alias, commands in alias_to_commands.items() if len(commands) > 1
+        }
+        assert not overlaps, f"Overlapping aliases: {overlaps}"

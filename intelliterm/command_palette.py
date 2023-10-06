@@ -284,12 +284,12 @@ class CommandPalette:
         Command(
             name="help",
             description="Show available commands",
-            aliases=["help", "h"],
+            aliases=["h", "help"],
         ),
         Command(
             name="version",
             description="Show version",
-            aliases=["version", "v"],
+            aliases=["v", "version"],
         ),
         Command(
             name="config",
@@ -299,7 +299,7 @@ class CommandPalette:
                 CommandArgument("edit", is_option=True),
                 CommandArgument("reset", is_option=True),
             ],
-            aliases=["use", "switch", "config", "cfg"],
+            aliases=["u", "use", "cfg", "switch", "config"],
             usage=[
                 CommandUsage(
                     command="config",
@@ -332,7 +332,7 @@ class CommandPalette:
         Command(
             name="info",
             description="Show chat info",
-            aliases=["info", "i"],
+            aliases=["i", "info"],
         ),
         Command(
             name="new",
@@ -342,28 +342,28 @@ class CommandPalette:
         Command(
             name="save",
             description="Save chat",
-            aliases=["save", "s"],
+            aliases=["s", "save"],
         ),
         Command(
             name="load",
             description="Load chat",
-            aliases=["load", "l"],
+            aliases=["l", "load"],
         ),
         Command(
             name="copy",
             description="Copy response",
-            aliases=["copy", "c"],
+            aliases=["c", "copy"],
             args=[CommandArgument("code", is_option=True)]
         ),
         Command(
             name="run",
             description="Run code block in response",
-            aliases=["run", "r"],
+            aliases=["r", "run"],
         ),
         Command(
             name="file",
             description="Input a file",
-            aliases=["file", "f"],
+            aliases=["f", "file"],
             args=[
                 CommandArgument("path"),
                 CommandArgument("prompt"),
@@ -391,7 +391,7 @@ class CommandPalette:
         Command(
             name="shell",
             description="Run a shell command",
-            aliases=["shell", "os"],
+            aliases=["os", "shell"],
             args=[CommandArgument("command")],
             usage=[
                 CommandUsage(
@@ -408,7 +408,7 @@ class CommandPalette:
         Command(
             name="quit",
             description=f"Quit {intelliterm.__name__}",
-            aliases=["quit", "q"],
+            aliases=["q", "quit"],
         )
     ]
 
