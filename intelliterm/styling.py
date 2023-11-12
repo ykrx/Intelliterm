@@ -2,7 +2,6 @@ from rich.style import Style
 
 from intelliterm.types import Colors
 
-
 ANSI_COLORS = {
     'black': '\033[30m',
     'red': '\033[31m',
@@ -16,14 +15,14 @@ ANSI_COLORS = {
 }
 
 COLORS: Colors = {
-    "info": "bright_black",
+    "info": "blue",
     "warning": "yellow",
     "danger": "red",
     "surface": "#121722",
-    "command": "bold green",
-    "arg": "not bold blue",
-    "option": "not bold magenta",
-    "value": "green"
+    "command": "blue bold ",
+    "arg": "magenta not bold",
+    "option": "magenta not bold",
+    "value": "magenta not bold "
 }
 
 INFO_STYLE = Style(color=f"{COLORS['info']}")

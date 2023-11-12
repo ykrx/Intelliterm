@@ -109,8 +109,9 @@ class Config:
                 else:
                     panels.append(
                         Panel((
-                            section + "\n" + ("-" * longest_line(pretty_config)) + "\n"
-                        ) + pretty_config)
+                            section + "\n" + ("-" * longest_line(pretty_config)) + "\n"                            
+                        ) + pretty_config,
+                            border_style="black")
                     )
 
         config_command = CommandPalette.get_command('config')
@@ -123,7 +124,8 @@ class Config:
                         title="[bold]:gear: Configurations",
                         subtitle=(random.choice(TIPS['config'])),
                         title_align="left",
-                        subtitle_align="left"
+                        subtitle_align="left",
+                        border_style="black"
                     )
                 )
 

@@ -32,20 +32,19 @@ if "OPENAI_API_KEY" not in os.environ:
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
-
 class Chat:
     """Class representing a chat client.
-    
+
     Attributes:
         config (Config): Configuration manager.
-        _oneshot (bool): If True, exits intelliterm after completion.        
-        autocopy (bool): Flag for auto-copying last response to clipboard. 
+        _oneshot (bool): If True, exits intelliterm after completion.
+        autocopy (bool): Flag for auto-copying last response to clipboard.
             Defaults to "off".
         history (list[str]): List of CommandPalette inputs.
         is_completing (bool): Flag indicating whether chat is completing prompt.
         chat_id (str): Unique identifier for the chat session.
         _context (list[ChatPrompt]): Current chat context.
-       
+
     Methods:
         configure(options: list[str]) -> None:
             Manage intelliterm configuration.
@@ -58,7 +57,7 @@ class Chat:
         last_prompt() -> Optional[ChatPrompt]:
             Return last prompt in context.
         new() -> None:
-            Start a new chat (clear context). 
+            Start a new chat (clear context).
         total_tokens() -> int:
             Return total number of tokens in current chat's context.
         info() -> str:
@@ -68,13 +67,13 @@ class Chat:
         create_title() -> str:
             Create a title for the current chat's context.
         save() -> None:
-            Save current chat.      
+            Save current chat.
         load() -> None:
-            Load saved chat.          
+            Load saved chat.
         ask(prompt: ChatPrompt, show_input: bool = True) -> None:
             Call model completion on a prompt.
         listen() -> None:
-            Listen for new prompts/commands.   
+            Listen for new prompts/commands.
     """
     def __init__(
         self,
@@ -92,7 +91,7 @@ class Chat:
 
     def history(self, input: str) -> None:
         """Add user input to history.
-        
+
         Args:
             input (str)
         """
@@ -100,7 +99,7 @@ class Chat:
 
     def context(self, prompt: Union[Prompt, list[Prompt]]) -> None:
         """Add a single prompt or list of prompts to context.
-        
+
         Args:
             prompt (Union[Prompt, list[Prompt]])
         """
@@ -120,6 +119,7 @@ class Chat:
 
     @classmethod
     def deserialize(cls, json_str: str) -> 'Chat':
+        # TODO: sdosdo 
         dict = json.loads(json_str)
 
         dict.pop('timestamp', None)
@@ -138,7 +138,7 @@ class Chat:
 
     def configure(self, options: list[str]) -> None:
         """Handle `!config` command.
-        
+
         Args:
             options (list[str]): Configuration options.
         """
@@ -167,7 +167,7 @@ class Chat:
 
     def last_prompt(self) -> Optional[Prompt]:
         """Return last prompt in context.
-        
+
         Returns:
             Optional[ChatPrompt]: Last prompt in chat. Defaults to None.
         """
@@ -178,11 +178,11 @@ class Chat:
         """
         self._context = self._context[:1]     # keep system prompt
         self.chat_id = str(uuid.uuid4())
-        console.with_divider(":speech_balloon: new chat")
+        console.info("[black]Started new chat")
 
     def total_tokens(self) -> int:
         """Return total number of tokens in current chat's context.
-        
+
         Returns:
             int: Total number of tokens in chat's context.
         """
@@ -190,7 +190,7 @@ class Chat:
 
     def info(self) -> str:
         """Return current chat's info as formatted string.
-        
+
         Returns:
             str: Chat info.
         """
@@ -226,6 +226,7 @@ class Chat:
                         Panel(
                             pretty_dict(file_info),
                             title="[bold]:open_file_folder: file",
+                            border_style="black"
                         )
                     )
                     prompt.content += file.read()
@@ -238,7 +239,7 @@ class Chat:
 
     def create_title(self) -> str:
         """Create a title for the current chat's context.
-        
+
         Returns:
             str: Generated title.
         """
@@ -307,7 +308,7 @@ class Chat:
 
             file_path = file_path.replace(os.environ['HOME'], '~')
             logger.info(f"Saved chat ${self.chat_id}: ${file_path}")
-            notification.emit(f"Saved chat: ${file_path}")
+            notification.emit(f"[black]Saved chat to: ${file_path}")
 
     # TODO(add test)
     def load(self) -> None:
@@ -328,7 +329,7 @@ class Chat:
                 file_name, i = pick(
                     file_names,
                     title="Load chat: ",
-                    indicator=emojize(":speech_balloon:"),
+                    indicator=">",
                 )
                 if i is not None:
                     selected_chat = Chat.deserialize(chats[i])
@@ -343,7 +344,7 @@ class Chat:
 
     def ask(self, prompt: Prompt, show_input: bool = True) -> None:
         """Call model completion on a prompt.
-        
+
         Args:
             prompt (ChatPrompt)
             show_input (bool): Show/hide input before completion. Defaults to True.
@@ -361,6 +362,7 @@ class Chat:
                     Markdown(prompt.content, code_theme=CODE_THEME),
                     title=self.info(),
                     title_align="right",
+                    border_style="black"
                 )
             )
 

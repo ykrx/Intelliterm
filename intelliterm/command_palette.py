@@ -15,7 +15,6 @@ import intelliterm
 from intelliterm.console import console
 from intelliterm.notifications import notification
 
-
 key_bindings = KeyBindings()
 
 
@@ -75,7 +74,7 @@ def bottom_toolbar() -> Any:
                     pass
         else:
             if input != CommandPalette.TRIGGER:
-                output = f"<strong>{input}</strong> : unknown command"
+                output = f"Unknown command: <strong><style color='ansired'>{input.strip()}</style></strong>"
     return HTML(output)
 
 
@@ -95,7 +94,7 @@ def prompt() -> str:
     style: Style = Style.from_dict({
         "": "",
         "caret": f"fg:ansi{config.get('accent_color')}",
-        "bottom-toolbar": f"fg:ansi{config.get('accent_color')}",
+        "bottom-toolbar": "fg:ansiblack bg:black",
     })
 
     return session.prompt(
@@ -192,7 +191,7 @@ class CommandUsage:
         hint += f"\n\t\t{self.description}\n"
 
         if self.examples:
-            hint += "\t\t[bold italic]CommandExample:[reset] "
+            hint += "\t\t[bold italic]example:[reset] "
 
             for example in self.examples:
                 hint += f"[command]{CommandPalette.TRIGGER + self.command}[reset]"
@@ -469,7 +468,7 @@ class CommandPalette:
                 CommandPalette.AVAILABLE_COMMANDS
             ) - 1 else ""
             help_message += command.hint()
-        console.print(Panel(help_message, title="Commands"))
+        console.print(Panel(help_message, title="Commands", border_style="black"))
 
     @staticmethod
     def is_valid_input(input: str) -> bool:

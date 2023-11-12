@@ -1,4 +1,5 @@
 from time import sleep
+from intelliterm.console import console
 
 
 class Notification:
@@ -23,6 +24,7 @@ class Notification:
         self.message = message
         sleep(0.01)     # TODO(refactor): currently a workaround for bottom_toolbar
         self._read = False
+        console.info(message)
 
 
 notification = Notification()

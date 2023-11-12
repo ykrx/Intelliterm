@@ -67,9 +67,7 @@ class Console(C):
             offset = (len(title) - emoji_offset + 2) // 2
 
             self.print(
-                ("-" * (os.get_terminal_size().columns // 2 - offset - 2)),
-                f"[bold]{title}",
-                ("[reset]" + "-" * (os.get_terminal_size().columns // 2 - offset - 1)),
+                (f"[black]{title} " + "-" * (os.get_terminal_size().columns - len(title))),
             )
         else:
             self.print('-' * os.get_terminal_size().columns)
