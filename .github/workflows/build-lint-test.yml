@@ -1,40 +1,40 @@
 name: Build, Lint & Test Package
 
 on:
-  push:
-    branches: ['main']
-  pull_request:
-    branches: ['main']
+    push:
+        branches: ['main']
+    pull_request:
+        branches: ['main']
 
 env:
-  OPENAI_API_KEY: FAKE_KEY
-  
+    OPENAI_API_KEY: FAKE_KEY
+
 permissions:
-  contents: read
+    contents: read
 
 jobs:
-  ci:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install Python
-        uses: actions/setup-python@v3
-        # see details (matrix, python-version, python-version-file, etc.)
-        # https://github.com/actions/setup-python
-      - name: Install poetry
-        uses: abatilo/actions-poetry@v2
-      - name: Setup a local virtual environment (if no poetry.toml file)
-        run: |
-          poetry config virtualenvs.create true --local
-          poetry config virtualenvs.in-project true --local
-      - uses: actions/cache@v3
-        name: Define a cache for the virtual environment based on the dependencies lock file
-        with:
-          path: ./.venv
-          key: venv-${{ hashFiles('poetry.lock') }}
-      - name: Install the project dependencies
-        run: poetry install
-      - name: Lint package
-        run: poetry run mypy .
-      - name: Test package
-        run: poetry run pytest -v
+    ci:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - name: Install Python
+              uses: actions/setup-python@v3
+              # see details (matrix, python-version, python-version-file, etc.)
+              # https://github.com/actions/setup-python
+            - name: Install poetry
+              uses: abatilo/actions-poetry@v2
+            - name: Setup a local virtual environment (if no poetry.toml file)
+              run: |
+                  poetry config virtualenvs.create true --local
+                  poetry config virtualenvs.in-project true --local
+            - uses: actions/cache@v3
+              name: Define a cache for the virtual environment based on the dependencies lock file
+              with:
+                  path: ./.venv
+                  key: venv-${{ hashFiles('poetry.lock') }}
+            - name: Install the project dependencies
+              run: poetry install
+            - name: Lint package
+              run: poetry run mypy .
+            - name: Test package
+              run: poetry run pytest -v
