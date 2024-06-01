@@ -17,16 +17,16 @@ class Console(C):
     Methods:
         info(*objects: Any) -> None:
             Prints the given objects to the console as information.
-        warning(*objects: Any) -> None: 
+        warning(*objects: Any) -> None:
             Prints the given objects to the console as a warning.
-        error(*objects: Any) -> None: 
+        error(*objects: Any) -> None:
             Prints the given objects to the console as an error.
-        divider(*objects: Any) -> None:  
+        divider(*objects: Any) -> None:
             Prints a divider as wide as the terminal window.
     """
+
     def info(self, *objects: Any, sep: str = " ", end: str = "\n") -> None:
-        """Print to console as info.
-        """
+        """Print to console as info."""
         message = " ".join(str(o) for o in objects)
         self.print(
             f"[bold blue]i [info][not bold]{message}",
@@ -34,8 +34,7 @@ class Console(C):
         )
 
     def warning(self, *objects: Any, sep: str = " ", end: str = "\n") -> None:
-        """Print to console as warning.
-        """
+        """Print to console as warning."""
         message = " ".join(str(o) for o in objects)
         self.print(
             f":warning: {message}",
@@ -45,8 +44,7 @@ class Console(C):
         )
 
     def error(self, *objects: Any, sep: str = " ", end: str = "\n") -> None:
-        """Print to console as error.
-        """
+        """Print to console as error."""
         message = " ".join(str(o) for o in objects)
         self.print(
             f":warning: {message}",
@@ -57,7 +55,7 @@ class Console(C):
 
     def with_divider(self, title: Optional[str] = None) -> None:
         """Print a divider as wide as the terminal window.
-        
+
         Args:
             title (Optional[str]): Title to center in divider. Defaults to None.
         """
@@ -67,10 +65,13 @@ class Console(C):
             offset = (len(title) - emoji_offset + 2) // 2
 
             self.print(
-                (f"[black]{title} " + "-" * (os.get_terminal_size().columns - len(title))),
+                (
+                    f"[black]{title} "
+                    + "-" * (os.get_terminal_size().columns - len(title))
+                ),
             )
         else:
-            self.print('-' * os.get_terminal_size().columns)
+            self.print("-" * os.get_terminal_size().columns)
 
 
 console = Console(theme=Theme(cast(Mapping[str, StyleType] | None, COLORS)))

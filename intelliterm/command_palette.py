@@ -19,11 +19,11 @@ key_bindings = KeyBindings()
 
 
 # TODO(implement): add useful bindings
-@key_bindings.add("escape", "c")     # option + c
+@key_bindings.add("escape", "c")  # option + c
 def exit_(event: Any) -> None:
     """
-        Pressing Ctrl-d will exit the user interface.
-        """
+    Pressing Ctrl-d will exit the user interface.
+    """
     event.app.exit()
 
 
@@ -32,7 +32,7 @@ def get_history() -> None:
     pass
 
 
-session: PromptSession = PromptSession()     #history=)
+session: PromptSession = PromptSession()  # history=)
 
 
 def bottom_toolbar() -> Any:
@@ -67,8 +67,9 @@ def bottom_toolbar() -> Any:
                 output_groups = output.split(" ", 1)
 
                 try:
-                    output_groups[curr_index
-                                  ] = f"<strong>{output_groups[curr_index]}</strong>"
+                    output_groups[curr_index] = (
+                        f"<strong>{output_groups[curr_index]}</strong>"
+                    )
                     output = " ".join(output_groups)
                 except IndexError:
                     pass
@@ -80,22 +81,25 @@ def bottom_toolbar() -> Any:
 
 def rprompt() -> str:
     from intelliterm.config import config
+
     return f"[{config.active().name}]"
 
 
 def prompt() -> str:
     """Prompt for user input.
-    
+
     Returns:
         str: User input.
     """
     from intelliterm.config import config
 
-    style: Style = Style.from_dict({
-        "": "",
-        "caret": f"fg:ansi{config.get('accent_color')}",
-        "bottom-toolbar": "fg:ansiblack bg:black",
-    })
+    style: Style = Style.from_dict(
+        {
+            "": "",
+            "caret": f"fg:ansi{config.get('accent_color')}",
+            "bottom-toolbar": "fg:ansiblack bg:black",
+        }
+    )
 
     return session.prompt(
         message=[
@@ -110,20 +114,20 @@ def prompt() -> str:
         validate_while_typing=False,
         bottom_toolbar=bottom_toolbar,
         placeholder=HTML(f"<ansiblack>  ({config.active().name})</ansiblack>"),
-     # rprompt=rprompt,
+        # rprompt=rprompt,
         style=style,
     )
 
 
 class CommandArgument:
     """Class defining a command argument/option.
-    
+
     Attributes:
         name (str): Argument name.
         pos (Optional[int]): Argument position.
         is_option (bool): Argument is an option for a command. Defaults to False.
             (ex: "edit" in: !config edit)
-    
+
     """
 
     # TODO(refactor): remove `is_option` (ie: improve logic separation)
@@ -140,11 +144,12 @@ class CommandArgument:
 
 class CommandExample:
     """Class defining a command usage CommandExample.
-    
+
     Attributes:
         command (str): Command name.
         args (Optional[list[Argument]]): List of command arguments/options.
     """
+
     def __init__(self, command: str, args: Optional[list[CommandArgument]]) -> None:
         self.command = command
         self.args = args
@@ -152,17 +157,18 @@ class CommandExample:
 
 class CommandUsage:
     """Class defining a usage CommandExample for a `Command`.
-    
+
     Attributes:
         command (str): Command name.
         description (str): Usage description.
         args (list[Argument]): List of arguments. Defaults to empty list.
         examples (list[CommandExample]): List of examples. Defaults to empty list.
-        
+
     Methods:
         hint() -> str:
             Returns a helpful hint explaining how to use a command.
     """
+
     def __init__(
         self,
         command: str,
@@ -177,7 +183,7 @@ class CommandUsage:
 
     def hint(self) -> str:
         """Returns a helpful hint explaining how to use a command.
-        
+
         Returns:
             str
         """
@@ -186,7 +192,8 @@ class CommandUsage:
         for arg in self.args:
             hint += (
                 f" [option]{arg.name}[reset]"
-                if arg.is_option else f" [arg]<{arg.name}>[reset]"
+                if arg.is_option
+                else f" [arg]<{arg.name}>[reset]"
             )
         hint += f"\n\t\t{self.description}\n"
 
@@ -205,18 +212,19 @@ class CommandUsage:
 
 class Command:
     """Class defining a CommandPalette command.
-    
+
     Attributes:
         name (str): Command name.
         description (str): Command description.
         aliases (list[str]): Command aliases.
         args (Optional[list[Argument]]): Command arguments. Defaults to None.
         usage (Optional[list[Usage]]): Command usage template. Defaults to None.
-            
+
     Methods:
         hint() -> str:
             Return documentation hint (command options, usage and examples).
     """
+
     def __init__(
         self,
         name: str,
@@ -233,8 +241,8 @@ class Command:
 
     def hint(self) -> str:
         """Return documentation hint (command options, usage and examples).
-        
-        Returns: 
+
+        Returns:
             str
         """
         hint = ""
@@ -248,9 +256,10 @@ class Command:
                 hint += "\n".join(f"\t[arg]<{arg.name}>[reset]" for arg in args) + "\n"
             if options:
                 hint += "  [bold italic]options:[reset]\n"
-                hint += "\n".join(
-                    f"\t[option]{option.name}[reset]" for option in options
-                ) + "\n"
+                hint += (
+                    "\n".join(f"\t[option]{option.name}[reset]" for option in options)
+                    + "\n"
+                )
         if self.usage:
             hint += "  [bold italic]usage:[reset]\n\t"
             hint += "\t".join(u.hint() for u in self.usage)
@@ -260,10 +269,10 @@ class Command:
 
 class CommandPalette:
     """Class representing a command manager that handles intelliterm-specific commands.
-    
+
     Methods:
         get_command(alias: str) -> Optional[Command]:
-            Get command matching alias.  
+            Get command matching alias.
         help() -> None:
             Show available commands and how to use them.
         is_command(input: str) -> bool:
@@ -271,11 +280,12 @@ class CommandPalette:
         is_valid_input(input: str) -> bool:
             Check if input matches a valid command alias.
         is_secondary_alias(alias: str) -> bool:
-            Check if alias is not a primary alias 
+            Check if alias is not a primary alias
             (ie: is shortened variant, like `h` for `help`).
         unrecognized(alias: str) -> None:
             Handle unrecognized command alias.
     """
+
     TRIGGER: str = "!"
     COMMAND_REGEX = r"^!(\w+)(?:\s{0,1}(.*))?"
 
@@ -300,15 +310,11 @@ class CommandPalette:
             ],
             aliases=["u", "use", "cfg", "switch", "config"],
             usage=[
-                CommandUsage(
-                    command="config",
-                    description="Show active configuration",
-                ),
+                CommandUsage(command="config", description="Show active configuration"),
                 CommandUsage(
                     command="use",
                     args=[CommandArgument("name")],
-                    description=
-                    "[reset]Use / switch to another configuration (case-insensitive)",
+                    description="[reset]Use / switch to another configuration (case-insensitive)",
                     examples=[
                         CommandExample(command="use", args=[CommandArgument("gpt3")])
                     ],
@@ -317,14 +323,14 @@ class CommandPalette:
                     command="config",
                     args=[CommandArgument("edit", is_option=True)],
                     description=(
-                        "Edit configurations file " +
-                        f"(via {os.environ.get('EDITOR', 'nano')})"
-                    )
+                        "Edit configurations file "
+                        + f"(via {os.environ.get('EDITOR', 'nano')})"
+                    ),
                 ),
                 CommandUsage(
                     command="config",
                     args=[CommandArgument("reset", is_option=True)],
-                    description="Reset configuration to defaults"
+                    description="Reset configuration to defaults",
                 ),
             ],
         ),
@@ -352,7 +358,7 @@ class CommandPalette:
             name="copy",
             description="Copy response",
             aliases=["c", "copy"],
-            args=[CommandArgument("code", is_option=True)]
+            args=[CommandArgument("code", is_option=True)],
         ),
         Command(
             name="run",
@@ -381,9 +387,9 @@ class CommandPalette:
                             args=[
                                 CommandArgument("file.txt"),
                                 CommandArgument("explain this file"),
-                            ]
+                            ],
                         )
-                    ]
+                    ],
                 ),
             ],
         ),
@@ -396,11 +402,10 @@ class CommandPalette:
                 CommandUsage(
                     command="shell",
                     args=[CommandArgument("command")],
-                    description=
-                    f"Run basic shell commands within {intelliterm.__name__}",
+                    description=f"Run basic shell commands within {intelliterm.__name__}",
                     examples=[
                         CommandExample(command="shell", args=[CommandArgument("ls")])
-                    ]
+                    ],
                 ),
             ],
         ),
@@ -408,7 +413,7 @@ class CommandPalette:
             name="quit",
             description=f"Quit {intelliterm.__name__}",
             aliases=["q", "quit"],
-        )
+        ),
     ]
 
     GROUPED_ALIASES = [command.aliases for command in AVAILABLE_COMMANDS]
@@ -421,17 +426,18 @@ class CommandPalette:
     @staticmethod
     def get_command(alias: str) -> Optional[Command]:
         """Get command matching alias.
-        
-        Args: 
+
+        Args:
             alias (str): Command alias.
-            
+
         Returns:
             Optional(Command): Command if it exists, otherwise None.
         """
         alias = alias.replace(CommandPalette.TRIGGER, "")
         return next(
             (
-                command for command in CommandPalette.AVAILABLE_COMMANDS
+                command
+                for command in CommandPalette.AVAILABLE_COMMANDS
                 if alias in command.aliases
             ),
             None,
@@ -440,10 +446,10 @@ class CommandPalette:
     @staticmethod
     def get_aliases(command_name: str) -> list[str]:
         """Get all aliases for command with name.
-        
+
         Args:
             command_name (str): Command name.
-            
+
         Returns:
             list[str]: List of aliases associated with command.
         """
@@ -456,40 +462,38 @@ class CommandPalette:
 
     @staticmethod
     def help() -> None:
-        """Show available commands and how to use them.
-        """
+        """Show available commands and how to use them."""
         help_message = ""
 
         for i, command in enumerate(CommandPalette.AVAILABLE_COMMANDS):
             aliases = [CommandPalette.TRIGGER + alias for alias in command.aliases]
             help_message += f"[command]{', '.join(aliases)}"
             help_message += f"[reset] : {command.description}"
-            help_message += "\n" if i != len(
-                CommandPalette.AVAILABLE_COMMANDS
-            ) - 1 else ""
+            help_message += (
+                "\n" if i != len(CommandPalette.AVAILABLE_COMMANDS) - 1 else ""
+            )
             help_message += command.hint()
         console.print(Panel(help_message, title="Commands", border_style="black"))
 
     @staticmethod
     def is_valid_input(input: str) -> bool:
         """Check if input matches a valid command alias.
-        
+
         Args:
             input (str): User input.
-            
+
         Returns:
             bool
         """
         if input.startswith(CommandPalette.TRIGGER):
-            match = re.match(CommandPalette.COMMAND_REGEX, input)     # is command
+            match = re.match(CommandPalette.COMMAND_REGEX, input)  # is command
             return match.group(1) in CommandPalette.ALL_ALIASES if match else False
         else:
-            return True     # is regular text
+            return True  # is regular text
 
     @staticmethod
     def unrecognized(alias: str) -> None:
-        """Handle unrecognized command alias.
-        """
+        """Handle unrecognized command alias."""
         grouped_commands = [
             " ".join(["!" + alias for alias in command.aliases])
             for command in CommandPalette.AVAILABLE_COMMANDS
@@ -507,19 +511,19 @@ class CommandPalette:
 
     @staticmethod
     def is_secondary_alias(alias: str) -> bool:
-        """Check if alias is not a primary alias 
-            (ie: is shortened variant, like `h` for `help`).
-           
-            Returns:
-                bool
+        """Check if alias is not a primary alias
+        (ie: is shortened variant, like `h` for `help`).
+
+        Returns:
+            bool
 
         """
         return alias not in CommandPalette.PRIMARY_ALIASES
 
 
 class CommandCompleter(Completer):
-    """Auto-completion for CommandPalette.
-    """
+    """Auto-completion for CommandPalette."""
+
     def get_completions(self, document: Any, complete_event: Any) -> Generator:
         from intelliterm.config import config
 
@@ -539,11 +543,12 @@ class CommandCompleter(Completer):
                             CommandPalette.TRIGGER + alias,
                             start_position=document.get_start_of_document_position(),
                             style=f"fg:ansi{config.get('accent_color')} bg:black",
-                        # selected_style="fg:black bg:red ",
-                            display_meta=
-                            f"(aliased: {CommandPalette.TRIGGER + command.name})"
-                            if CommandPalette.is_secondary_alias(alias) else
-                            command.description,
+                            # selected_style="fg:black bg:red ",
+                            display_meta=(
+                                f"(aliased: {CommandPalette.TRIGGER + command.name})"
+                                if CommandPalette.is_secondary_alias(alias)
+                                else command.description
+                            ),
                         )
 
 

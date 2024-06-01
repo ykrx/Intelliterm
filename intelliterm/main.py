@@ -6,6 +6,8 @@ from typing import NoReturn, Optional
 
 from intelliterm import __version__
 from intelliterm.chat import Chat
+from intelliterm.client import Backend, Client
+from intelliterm.config import config
 from intelliterm.console import console
 from intelliterm.prompt import SPECIAL_PROMPTS, Prompt
 from intelliterm.utils import (
@@ -15,7 +17,6 @@ from intelliterm.utils import (
     setup_dirs,
     setup_logging,
 )
-
 
 __author__ = "Yulian Kraynyak"
 __copyright__ = "Yulian Kraynyak"
@@ -51,10 +52,10 @@ class ArgParser(argparse.ArgumentParser):
 
 def parse_args(args: list[str]) -> argparse.Namespace:
     """Parse command line parameters.
-    
+
     Args:
         args (list[str]): CLI parameters as list of strings (for example  `["--help"]`).
-            
+
     Returns:
         argparse.Namespace: CLI parameters namespace.
     """
@@ -74,7 +75,7 @@ def parse_args(args: list[str]) -> argparse.Namespace:
         type=str,
         metavar="STR",
     )
-    parser.add_argument(     # TODO(unfinished)
+    parser.add_argument(  # TODO(unfinished)
         "-f",
         "--file",
         dest="file",
@@ -148,7 +149,7 @@ def main(_args: list[str]) -> None:
 
             if len(prompt.content) > 0:
                 if is_git_diff(prompt.content):
-                    prompt.content = SPECIAL_PROMPTS['GIT_DIFF'] + prompt.content
+                    prompt.content = SPECIAL_PROMPTS["GIT_DIFF"] + prompt.content
                 chat.oneshot(True)
                 chat.ask(prompt)
             else:

@@ -5,6 +5,7 @@ from typing import Any
 from unittest import TestCase, mock
 
 from intelliterm.chat import Chat
+from intelliterm.client import Backend, Client
 from intelliterm.prompt import Prompt
 
 
@@ -13,19 +14,16 @@ class TestChat(TestCase):
 
     def setUp(self) -> None:
         self.chat = Chat()
+        self.chat.context(
+            [Prompt(content="one"), Prompt(content="two"), Prompt(content="three")]
+        )
 
-        self.chat.context([
-            Prompt(content="one"),
-            Prompt(content="two"),
-            Prompt(content="three")
-        ])
-
-    @mock.patch.object(Chat, 'create_title')
+    @mock.patch.object(Chat, "create_title")
     def test_save(self, test_create_title: Any) -> None:
         test_create_title.return_value = self.test_chat_title
 
         with tempfile.TemporaryDirectory() as test_dir:
-            with mock.patch('intelliterm.chat.SAVED_CHATS_DIR', test_dir):
+            with mock.patch("intelliterm.chat.SAVED_CHATS_DIR", test_dir):
                 self.chat.save()
 
                 with open(
@@ -37,5 +35,5 @@ class TestChat(TestCase):
                     for i, prompt in enumerate(self.chat._context):
                         self.assertEqual(
                             prompt.content,
-                            contents_json['_context'][i]['content'],
+                            contents_json["_context"][i]["content"],
                         )

@@ -1,9 +1,10 @@
 # ruff: noqa: E501
 
 import json
+import os
 import platform
 import re
-from typing import Any, Literal, Optional, cast
+from typing import Any, Literal, Optional, TypedDict, cast
 
 import pyperclip
 import tiktoken
@@ -14,21 +15,20 @@ from intelliterm.config import config
 from intelliterm.console import console
 from intelliterm.notifications import notification
 
-# TODO(improve): extend `bio` with helpful, general info about self for better responses
 bio = {
     "os": platform.system(),
+    "config": config.to_dict(),
 }
 
+DEFAULT_ENCODING = "gpt-3.5-turbo"
 SPECIAL_PROMPTS = {
-    "SYSTEM":
-        f"""
+    "SYSTEM": f"""
         You are {intelliterm.__name__}, 
         a general knowledge and code assistant running via CLI and specializing in short, straight-to-the-point, intuitive answers.
         
-        My bio: {bio}
+        Use this context for questions about config, environment you are running in: {bio}
         
-        If I ask anything that involves my bio make sure to make clear
-        that all information is general/approximate/non-identifying.
+        If I ask anything that involves who you are, clarify that all information is general/approximate/non-identifying.
         
         If input is a concept: use analogies to related concepts.
         Edit every response to ensure the following rules are always satisfied:
@@ -42,41 +42,45 @@ SPECIAL_PROMPTS = {
               respond with the code itself
         Input:
         """.strip(),
-    "GIT_DIFF":
-        """
+    "GIT_DIFF": """
         Generate a commit message, max 50 characters, in conventional format:
         """.strip(),
-    "CHAT_TITLE":
-        """Summarize this in a maximum of 20 characters"""
+    "CHAT_TITLE": """Summarize this in a maximum of 20 characters""",
 }
 
 Role = Literal["system", "assistant", "user"]
 
 
+class Message(TypedDict, total=False):
+    content: Any  # TODO: add multi-modal support
+    role: Role
+
+
 class Prompt:
     """Class representing a chat prompt.
-    
+
     Attributes:
         role (Role): Role to assume. Defaults to "user".
         content (str): Prompt content.
         is_file (bool): File input flag.
-        
+
     Methods:
         copy(options: Optional[list[str]] = None) -> None:
             Copy prompt content/code to the clipboard.
-        to_message() -> dict[str, str]:  
+        to_message() -> dict[str, str]:
             Transform to OpenAI Chat Completion message.
         token_count() -> int:
             Count number of tokens in prompt content.
         get_code() -> Optional[Code]:
             Extract code from prompt content.
     """
+
     def __init__(
         self,
         is_file: bool = False,
         content: str = "",
         role: Role = "user",
-        took: Optional[float] = None
+        took: Optional[float] = None,
     ) -> None:
         self.is_file: bool = is_file
         self.content: str = content
@@ -87,7 +91,7 @@ class Prompt:
         return self.__dict__
 
     @classmethod
-    def deserialize(cls, json_str: str) -> 'Prompt':
+    def deserialize(cls, json_str: str) -> "Prompt":
         dict = json.loads(json_str)
         return cast(Prompt, dict)
 
@@ -97,7 +101,11 @@ class Prompt:
         Returns:
             int: Number of tokens in prompt content.
         """
-        encoding = tiktoken.encoding_for_model(config.get("model"))
+        encoding = tiktoken.encoding_for_model(
+            config.get("model")
+            if config.get("model").startswith("gpt")
+            else DEFAULT_ENCODING
+        )
         num_tokens = len(encoding.encode(self.content))
         return num_tokens
 
@@ -105,9 +113,10 @@ class Prompt:
         """Copy prompt content or code to clipboard.
 
         Args:
-            options (Optional[list[str]]): 
+            options (Optional[list[str]]):
                 Copy command options. Defaults to None.
         """
+
         def _copy_to_clipboard(text: str) -> None:
             if len(text) == 0:
                 console.print("Nothing to copy")
@@ -129,7 +138,6 @@ class Prompt:
                         pass
                     else:
                         notification.emit("No code to copy")
-
         else:
             # > !c
             # Copy all content.
@@ -137,22 +145,14 @@ class Prompt:
                 _copy_to_clipboard(self.content)
                 console.with_divider(":clipboard: copied!")
 
-    def to_message(self) -> dict[str, Any]:
-        """Transform to OpenAI Chat Completion message.
-
-        Returns:
-            dict[str, Any]
-        """
-        return {
-            "content": self.content,
-            "role": self.role
-        }
+    def get_message(self) -> Message:
+        return {"role": self.role, "content": self.content}
 
     def parse_code(self) -> list[Code]:
         """Extract code blocks from prompt content.
 
-        Returns: 
-            list[Code] 
+        Returns:
+            list[Code]
         """
         found_code_blocks = re.findall(r"```(\w+)\n([\s\S]*?)\n```", self.content)
         code_blocks: list[Code] = []

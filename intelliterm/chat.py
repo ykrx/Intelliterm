@@ -8,14 +8,14 @@ from datetime import datetime
 from string import punctuation
 from typing import Any, Optional, Union
 
+import anthropic
 import openai
-from emoji import emojize
 from pick import pick
-from rich.live import Live
 from rich.markdown import Markdown
 from rich.panel import Panel
 
 import intelliterm
+from intelliterm.client import Backend, Client
 from intelliterm.command_palette import CommandPalette, prompt
 from intelliterm.config import config
 from intelliterm.console import console
@@ -30,7 +30,16 @@ if "OPENAI_API_KEY" not in os.environ:
     console.print("Add \texport OPENAI_API_KEY = 'API-KEY'\t to your .zshrc or .bashrc")
     quit()
 
+if "ANTHROPIC_API_KEY" not in os.environ:
+    console.error("Missing ANTHROPIC_API_KEY")
+    console.print(
+        "Add \texport ANTHROPIC_API_KEY = 'API-KEY'\t to your .zshrc or .bashrc"
+    )
+    quit()
+
 openai.api_key = os.getenv("OPENAI_API_KEY")
+anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
 
 class Chat:
     """Class representing a chat client.
@@ -75,6 +84,7 @@ class Chat:
         listen() -> None:
             Listen for new prompts/commands.
     """
+
     def __init__(
         self,
         oneshot: bool = False,
@@ -86,7 +96,7 @@ class Chat:
         self.is_completing: bool = False
         self.chat_id: str = str(uuid.uuid4())
         self._context: list[Prompt] = [
-            Prompt(content=SPECIAL_PROMPTS['SYSTEM'], role="system")
+            Prompt(content=SPECIAL_PROMPTS["SYSTEM"], role="system")
         ]
 
     def history(self, input: str) -> None:
@@ -113,22 +123,22 @@ class Chat:
         obj = {
             "chat_id": self.chat_id,
             "timestamp": str(datetime.now()),
-            "_context": context
+            "_context": context,
         }
         return obj
 
     @classmethod
-    def deserialize(cls, json_str: str) -> 'Chat':
-        # TODO: sdosdo 
+    def deserialize(cls, json_str: str) -> "Chat":
         dict = json.loads(json_str)
 
-        dict.pop('timestamp', None)
+        dict.pop("timestamp", None)
+        client = Client(Backend(config.get("backend")))
         chat = Chat()
         chat.__dict__.update(dict)
 
         new_context: list[Prompt] = []
 
-        for p in dict['_context']:
+        for p in dict["_context"]:
             prompt = Prompt()
             prompt.__dict__.update(p)
             new_context.append(prompt)
@@ -174,9 +184,8 @@ class Chat:
         return self._context[-1] if len(self._context) > 1 else None
 
     def new(self) -> None:
-        """Start a new chat (clear context).
-        """
-        self._context = self._context[:1]     # keep system prompt
+        """Start a new chat (clear context)."""
+        self._context = self._context[:1]  # keep system prompt
         self.chat_id = str(uuid.uuid4())
         console.info("[black]Started new chat")
 
@@ -199,7 +208,9 @@ class Chat:
         total_tokens = self.total_tokens()
 
         if last_prompt:
-            info += f"[bold][{config.get('accent_color')}]:gear: {config.active().name} "
+            info += (
+                f"[bold][{config.get('accent_color')}]:gear: {config.active().name} "
+            )
             info += f"[reset]([bold]{last_prompt.token_count()} "
             info += f"[reset]token{'s' if last_prompt.token_count() > 1 else ''}, "
             info += f"[bold]{total_tokens} [reset]total)"
@@ -207,14 +218,14 @@ class Chat:
 
     def file(self, path: str, prompt: Prompt) -> None:
         """Handle file input.
-        
+
         Args:
             path (str): Path to file.
             prompt (ChatPrompt): (ie: what to do with file)
         """
-        path = path.replace("~", os.environ['HOME'])
+        path = path.replace("~", os.environ["HOME"])
 
-        if os.environ['HOME'] not in path:
+        if os.environ["HOME"] not in path:
             # use cwd
             path = os.path.join(os.getcwd(), path)
 
@@ -226,7 +237,7 @@ class Chat:
                         Panel(
                             pretty_dict(file_info),
                             title="[bold]:open_file_folder: file",
-                            border_style="black"
+                            border_style="black",
                         )
                     )
                     prompt.content += file.read()
@@ -245,11 +256,13 @@ class Chat:
         """
         response = openai.ChatCompletion.create(
             model=config.get("model"),
-            messages=([prompt.to_message() for prompt in self._context[1:]] +
-                      [Prompt(content=SPECIAL_PROMPTS['CHAT_TITLE']).to_message()]),
+            messages=(
+                [prompt.get_message() for prompt in self._context[1:]]
+                + [Prompt(content=SPECIAL_PROMPTS["CHAT_TITLE"]).get_message()]
+            ),
             temperature=float(config.get("temperature")),
             presence_penalty=float(config.get("presence_penalty")),
-            frequency_penalty=float(config.get("frequency_penalty"))
+            frequency_penalty=float(config.get("frequency_penalty")),
         )
         title: str = str(response.choices[0].message.content).strip(punctuation)
         title = re.sub(r'[\\/*?:"<>|]', "", title)
@@ -273,15 +286,15 @@ class Chat:
         return title
 
     def save(self) -> None:
-        """Save current chat.
-        """
+        """Save current chat."""
+
         def check_if_saved() -> tuple[bool, Optional[str]]:
             for file_name in os.listdir(SAVED_CHATS_DIR):
                 if file_name.endswith(".json"):
                     file_path = os.path.join(SAVED_CHATS_DIR, file_name)
                     with open(file_path) as file:
                         chat = json.loads(file.read())
-                        if chat['chat_id'] == self.chat_id:
+                        if chat["chat_id"] == self.chat_id:
                             return (True, file_name)
             return (False, None)
 
@@ -306,14 +319,13 @@ class Chat:
             chat_dict = self.serialize()
             json.dump(chat_dict, file, indent=4)
 
-            file_path = file_path.replace(os.environ['HOME'], '~')
+            file_path = file_path.replace(os.environ["HOME"], "~")
             logger.info(f"Saved chat ${self.chat_id}: ${file_path}")
             notification.emit(f"[black]Saved chat to: ${file_path}")
 
     # TODO(add test)
     def load(self) -> None:
-        """Load a saved chat.
-        """
+        """Load a saved chat."""
         file_names: list[str] = []
         chats: list[str] = []
 
@@ -349,7 +361,8 @@ class Chat:
             prompt (ChatPrompt)
             show_input (bool): Show/hide input before completion. Defaults to True.
         """
-        prompt_message = prompt.to_message()
+        client = Client(Backend(config.get("backend")))
+        prompt_message = prompt.get_message()
 
         console.clear()
         logger.info(prompt_message)
@@ -362,61 +375,30 @@ class Chat:
                     Markdown(prompt.content, code_theme=CODE_THEME),
                     title=self.info(),
                     title_align="right",
-                    border_style="black"
+                    border_style="black",
                 )
             )
 
-        markdown = Markdown("", code_theme=CODE_THEME)
         full_content = ""
+        markdown = Markdown("", code_theme=CODE_THEME)
 
         try:
             self.is_completing = True
             start_time = time.time()
-            response = openai.ChatCompletion.create(
-                model=config.get("model"),
-                messages=[prompt.to_message() for prompt in self._context],
-                temperature=float(config.get("temperature")),
-                presence_penalty=float(config.get("presence_penalty")),
-                frequency_penalty=float(config.get("frequency_penalty")),
-                stream=True,
-            )
-
-            messages = []
-
-            with Live(
-                markdown,
-                console=console,
-                transient=True,
-                refresh_per_second=40,
-                vertical_overflow="visible"
-            ) as live:
-                for chunk in response:
-                    message = chunk['choices'][0]['delta']
-                    messages.append(message)
-
-                    full_content = "".join([m.get("content", "") for m in messages])
-                    markdown = Markdown(
-                        full_content,
-                        code_theme=CODE_THEME,
-                    )
-                    live.update(markdown)
-            response.close()
-        except openai.InvalidRequestError as e:
-            console.print("openai:", e)
-            return None
-        except Exception as e:
-            console.print(e)
+            full_content = client.get_response(prompt, self._context, markdown) or ""
         except (KeyboardInterrupt, EOFError):
             if self.is_completing:
                 console.with_divider(":stop_button: aborted")
                 return None
+        except Exception as e:
+            console.print(e)
         finally:
             self.is_completing = False
             self.context(
                 Prompt(
                     content=full_content,
                     role="assistant",
-                    took=time.time() - start_time
+                    took=time.time() - start_time,
                 )
             )
             console.print(markdown)
@@ -438,8 +420,7 @@ class Chat:
             self.listen()
 
     def listen(self) -> None:
-        """Listen for new prompts/commands.
-        """
+        """Listen for new prompts/commands."""
         while True:
             try:
                 input = prompt()
@@ -485,7 +466,7 @@ class Chat:
                                     if len(options) > 0:
                                         self.file(
                                             options[0],
-                                            Prompt(content="".join(options[1:]))
+                                            Prompt(content="".join(options[1:])),
                                         )
                                     else:
                                         console.error("No file specified")

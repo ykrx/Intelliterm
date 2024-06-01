@@ -5,7 +5,7 @@ packages = \
 ['intelliterm']
 
 package_data = \
-{'': ['*']}
+{'': ['*'], 'intelliterm': ['.pytest_cache/*', '.pytest_cache/v/cache/*']}
 
 install_requires = \
 ['aiohttp>=3.9.0,<4.0.0',
