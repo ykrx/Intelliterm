@@ -1,13 +1,13 @@
 # Intelliterm
 
-> Chat with AI from your terminal!
+> Chat with LLMs from your terminal!
 
 > **Note**<br/>
 > This is a side project I occasionally work on in my free time, [report](https://github.com/ykrx/Intelliterm/issues) any bugs and/or desired features. [Contributions are welcome!](#contributing)
 
 ## Features
 
--   **🧠 GPT-4** — Chat with any of [OpenAI's language models](https://platform.openai.com/docs/models)!
+-   **🧠 Anthropic + OpenAI Models** — Chat with Opus, GPT4 and any every other Anthropic or OpenAI models!
 -   **👾 Code Execution** — Copy and run code [^1]
 -   **⚙️ Configurations** — Quickly switch between models (mid-chat!) and manage multiple configurations
 -   **📂 File Input** — Dump files into prompts!
@@ -24,10 +24,11 @@ pip install intelliterm
 ## How to use
 
 > **Note**<br/>
-> Make sure you've set your `OPENAI_API_KEY` environment variable in `~/.zshrc` or `~/.bashrc`:
+> Make sure you've set your `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` environment variables in `~/.zshrc` or `~/.bashrc`:
 >
 > ```shell
-> export OPENAI_API_KEY='YOUR-API-KEY'
+> export ANTHROPIC_API_KEY='YOUR-ANTHROPIC-KEY'
+> export OPENAI_API_KEY='YOUR-OPENAI-KEY'
 > ```
 
 Basic usage:
