@@ -8,6 +8,7 @@ on:
 
 env:
     OPENAI_API_KEY: FAKE_KEY
+    ANTHROPIC_API_KEY: FAKE_KEY
 
 permissions:
     contents: read
