@@ -1,4 +1,4 @@
-name: Build, Lint & Test Package
+name: Run Tests
 
 on:
     push:

@@ -6,8 +6,6 @@ from typing import NoReturn, Optional
 
 from intelliterm import __version__
 from intelliterm.chat import Chat
-from intelliterm.client import Backend, Client
-from intelliterm.config import config
 from intelliterm.console import console
 from intelliterm.prompt import SPECIAL_PROMPTS, Prompt
 from intelliterm.utils import (

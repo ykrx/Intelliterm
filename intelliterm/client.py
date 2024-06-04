@@ -7,9 +7,9 @@ from rich.live import Live
 from rich.markdown import Markdown
 
 from intelliterm.config import config
-from intelliterm.console import Console, console
+from intelliterm.console import console
 from intelliterm.constants import CODE_THEME
-from intelliterm.prompt import Message, Prompt, Role
+from intelliterm.prompt import Message, Prompt
 
 
 class Backend(Enum):

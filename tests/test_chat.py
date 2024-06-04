@@ -1,11 +1,10 @@
 import json
 import os
-import tempfile
+from tempfile import TemporaryDirectory
 from typing import Any
 from unittest import TestCase, mock
 
 from intelliterm.chat import Chat
-from intelliterm.client import Backend, Client
 from intelliterm.prompt import Prompt
 
 
@@ -15,14 +14,18 @@ class TestChat(TestCase):
     def setUp(self) -> None:
         self.chat = Chat()
         self.chat.context(
-            [Prompt(content="one"), Prompt(content="two"), Prompt(content="three")]
+            [
+                Prompt(content="one"),
+                Prompt(content="two"),
+                Prompt(content="three"),
+            ]
         )
 
     @mock.patch.object(Chat, "create_title")
     def test_save(self, test_create_title: Any) -> None:
         test_create_title.return_value = self.test_chat_title
 
-        with tempfile.TemporaryDirectory() as test_dir:
+        with TemporaryDirectory() as test_dir:
             with mock.patch("intelliterm.chat.SAVED_CHATS_DIR", test_dir):
                 self.chat.save()
 

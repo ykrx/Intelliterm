@@ -511,12 +511,8 @@ class CommandPalette:
 
     @staticmethod
     def is_secondary_alias(alias: str) -> bool:
-        """Check if alias is not a primary alias
-        (ie: is shortened variant, like `h` for `help`).
-
-        Returns:
-            bool
-
+        """Check if alias is not a primary alias.
+        (ie: is shortened variant, like `h` for `help`)
         """
         return alias not in CommandPalette.PRIMARY_ALIASES
 
@@ -527,11 +523,7 @@ class CommandCompleter(Completer):
     def get_completions(self, document: Any, complete_event: Any) -> Generator:
         from intelliterm.config import config
 
-        # current_position: Point = document.get_menu_position()
-        # print(current_position)
-
         word: str = document.current_line.replace(CommandPalette.TRIGGER, "")
-        # word: str = document.get_word_before_cursor(pattern=re.compile(COMMAND_REGEX))
         num_words = len(word.split())
 
         if num_words == 0:
@@ -543,7 +535,6 @@ class CommandCompleter(Completer):
                             CommandPalette.TRIGGER + alias,
                             start_position=document.get_start_of_document_position(),
                             style=f"fg:ansi{config.get('accent_color')} bg:black",
-                            # selected_style="fg:black bg:red ",
                             display_meta=(
                                 f"(aliased: {CommandPalette.TRIGGER + command.name})"
                                 if CommandPalette.is_secondary_alias(alias)

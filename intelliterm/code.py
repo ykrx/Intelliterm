@@ -15,9 +15,7 @@ class Code:
     # TODO(implement): Create venv + install deps (if necessary to run code snippet)
     # TODO(implement): handle multiple code blocks
     def run(self) -> None:
-        """Execute code.
-        """
-        # TODO(fix): doesn't work yet
+        """Execute code."""
         if not self._confirmed:
             self._confirmed = confirm(f"Run {self.language} code?")
 

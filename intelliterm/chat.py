@@ -132,7 +132,6 @@ class Chat:
         dict = json.loads(json_str)
 
         dict.pop("timestamp", None)
-        client = Client(Backend(config.get("backend")))
         chat = Chat()
         chat.__dict__.update(dict)
 

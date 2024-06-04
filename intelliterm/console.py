@@ -6,13 +6,13 @@ from rich.console import Console as C
 from rich.style import StyleType
 from rich.theme import Theme
 
-from intelliterm.styling import COLORS, DANGER_STYLE, INFO_STYLE, WARNING_STYLE
+from intelliterm.styling import COLORS, STYLE
 
 
 class Console(C):
     """A class for printing formatted messages to the console.
 
-    Inherits from rich.console's `Console`.
+    (Inherits from rich.console's `Console`)
 
     Methods:
         info(*objects: Any) -> None:
@@ -30,7 +30,7 @@ class Console(C):
         message = " ".join(str(o) for o in objects)
         self.print(
             f"[bold blue]i [info][not bold]{message}",
-            style=INFO_STYLE,
+            style=STYLE["info"],
         )
 
     def warning(self, *objects: Any, sep: str = " ", end: str = "\n") -> None:
@@ -40,7 +40,7 @@ class Console(C):
             f":warning: {message}",
             sep=sep,
             end=end,
-            style=WARNING_STYLE,
+            style=STYLE["warning"],
         )
 
     def error(self, *objects: Any, sep: str = " ", end: str = "\n") -> None:
@@ -50,7 +50,7 @@ class Console(C):
             f":warning: {message}",
             sep=sep,
             end=end,
-            style=DANGER_STYLE,
+            style=STYLE["danger"],
         )
 
     def with_divider(self, title: Optional[str] = None) -> None:
