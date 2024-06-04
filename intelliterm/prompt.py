@@ -1,7 +1,6 @@
 # ruff: noqa: E501
 
 import json
-import os
 import platform
 import re
 from typing import Any, Literal, Optional, TypedDict, cast

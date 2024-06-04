@@ -4,8 +4,7 @@ import platformdirs
 
 import intelliterm
 
-
-CODE_THEME = "lightbulb"     # (Pygments theme)
+CODE_THEME = "lightbulb"  # (Pygments theme)
 
 APP_AUTHOR = "Yulian Kraynyak"
 USER_DATA_DIR = platformdirs.user_data_dir(intelliterm.__name__, APP_AUTHOR)

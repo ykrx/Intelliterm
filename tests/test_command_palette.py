@@ -1,17 +1,21 @@
-from collections import Counter, defaultdict
+from collections import defaultdict
 
 import pytest
 
 from intelliterm.command_palette import Command, CommandPalette
 
 
-class TestCommandPalette():
-    alias_expected_command_name = [(alias, command.name)
-                                   for command in CommandPalette.AVAILABLE_COMMANDS
-                                   for alias in command.aliases]
-    command_name_expected_aliases = [(command.name, command.aliases)
-                                     for command in CommandPalette.AVAILABLE_COMMANDS
-                                     for alias in command.aliases]
+class TestCommandPalette:
+    alias_expected_command_name = [
+        (alias, command.name)
+        for command in CommandPalette.AVAILABLE_COMMANDS
+        for alias in command.aliases
+    ]
+    command_name_expected_aliases = [
+        (command.name, command.aliases)
+        for command in CommandPalette.AVAILABLE_COMMANDS
+        for alias in command.aliases
+    ]
 
     @pytest.mark.parametrize(
         "alias, expected_command_name", alias_expected_command_name
@@ -50,6 +54,8 @@ class TestCommandPalette():
                 alias_to_commands[alias].append(command.name)
         overlaps = {
             alias: commands
-            for alias, commands in alias_to_commands.items() if len(commands) > 1
+            for alias, commands in alias_to_commands.items()
+            if len(commands) > 1
         }
+
         assert not overlaps, f"Overlapping aliases: {overlaps}"

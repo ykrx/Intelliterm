@@ -203,11 +203,7 @@ class Config:
             self.show()
 
     def to_dict(self) -> dict:
-        """Transform config to dictionary.
-
-        Returns:
-            dict[str, str]
-        """
+        """Transform config to dictionary."""
         return {
             section: dict(self.config[section]) for section in self.config.sections()
         }
