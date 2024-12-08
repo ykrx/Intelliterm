@@ -1,9 +1,8 @@
 # Intelliterm
 
 > Chat with LLMs from your terminal!
-
-> **Note**<br/>
-> This is a side project I occasionally worked on, but no longer maintain. [Contributions are welcome!](#contributing)
+> 
+> _This is a side project I built mostly for my own productivity, but no longer maintain. [Contributions are welcome!](#contributing)_
 
 ## Features
 
