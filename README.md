@@ -1,8 +1,11 @@
 # Intelliterm
 
 > Chat with LLMs from your terminal!
-> 
-> _This is a side project I built mostly for my own productivity, but no longer maintain. [Contributions are welcome!](#contributing)_
+
+> [!NOTE]
+> _This is a side project I built mostly for my own productivity, but no longer maintain._
+>
+> [Contributions are welcome!](#contributing)
 
 ## Features
 
@@ -22,7 +25,7 @@ pip install intelliterm
 
 ## How to use
 
-> **Note**<br/>
+> [!TIP]
 > Make sure you've set your `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` environment variables in `~/.zshrc` or `~/.bashrc`:
 >
 > ```shell
@@ -49,7 +52,7 @@ cat file.py | ai
 git diff | ai
 ```
 
-> **Note**<br/>
+> [!IMPORTANT]
 > Piping a **git diff** is a _special case_ for which Intelliterm one-shot generates a commit message in [conventional format](https://www.conventionalcommits.org/en/v1.0.0/), summarizing the diff (for better UX).
 
 ### Options
@@ -94,7 +97,7 @@ git diff | ai
 
 ## `!` Command Palette
 
-> **Note**
+> [!NOTE]
 > You must be in a chat to use **Command Palette** (start a chat via `ai` or `ai <prompt>`)
 
 Intelliterm comes with a set of handy commands, triggered by entering `!` followed by:
